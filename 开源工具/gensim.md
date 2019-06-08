@@ -58,15 +58,72 @@ Gensim中用model指代将一篇文档转换（transform）为另一种形式的
 
 
 
+## 2 步骤一：训练语料的预处理
 
+训练语料的预处理指的是将文档中原始的字符文本转换成Gensim模型所能理解的稀疏向量的过程。
 
+通常，我们要处理的原生语料是一堆文档的集合，每一篇文档又是一些原生字符的集合。在交给Gensim的模型训练之前，我们需要将这些原生字符解析成Gensim能处理的稀疏向量的格式。由于语言和应用的多样性，我们需要先对原始的文本进行分词、去除停用词等操作，得到每一篇文档的特征列表。例如，在词袋模型中，文档的特征就是其包含的word：
 
+texts = [['human', 'interface', 'computer'],
 
+['survey', 'user', 'computer', 'system', 'response', 'time'],
 
+['eps', 'user', 'interface', 'system'],
 
+['system', 'human', 'system', 'eps'],
 
+['user', 'response', 'time'],
 
+['trees'],
 
+['graph', 'trees'],
+
+['graph', 'minors', 'trees'],
+
+['graph', 'minors', 'survey']]
+
+其中，corpus的每一个元素对应一篇文档。
+
+接下来，我们可以调用Gensim提供的API建立语料特征（此处即是word）的索引字典，并将文本特征的原始表达转化成词袋模型对应的稀疏向量的表达。依然以词袋模型为例：
+
+from gensim import corpora
+ dictionary = corpora.Dictionary(texts)
+ corpus = [dictionary.doc2bow(text) for text in texts]
+ print corpus[0] # [(0, 1), (1, 1), (2, 1)]
+ 到这里，训练语料的预处理工作就完成了。我们得到了语料中每一篇文档对应的稀疏向量（这里是bow向量）；向量的每一个元素代表了一个word在这篇文档中出现的次数。值得注意的是，虽然词袋模型是很多主题模型的基本假设，这里介绍的doc2bow函数并不是将文本转化成稀疏向量的唯一途径。在下一小节里我们将介绍更多的向量变换函数。
+
+最后，出于内存优化的考虑，Gensim支持文档的流式处理。我们需要做的，只是将上面的列表封装成一个Python迭代器；每一次迭代都返回一个稀疏向量即可。
+
+class MyCorpus(object):
+ def **iter**(self):
+ for line in open('mycorpus.txt'):
+ \# assume there's one document per line, tokens                   separated by whitespace
+ yield dictionary.doc2bow(line.lower().split())
+
+## 3 步骤二：主题向量的变换
+
+对文本向量的变换是Gensim的核心。通过挖掘语料中隐藏的语义结构特征，我们最终可以变换出一个简洁高效的文本向量。
+
+在Gensim中，每一个向量变换的操作都对应着一个主题模型，例如上一小节提到的对应着词袋模型的doc2bow变换。每一个模型又都是一个标准的Python对象。下面以TF-IDF模型为例，介绍Gensim模型的一般使用方法。
+
+首先是模型对象的初始化。通常，Gensim模型都接受一段训练语料（注意在Gensim中，语料对应着一个稀疏向量的迭代器）作为初始化的参数。显然，越复杂的模型需要配置的参数越多。
+
+from gensim import models
+ tfidf = models.TfidfModel(corpus)
+ 其中，corpus是一个返回bow向量的迭代器。这两行代码将完成对corpus中出现的每一个特征的IDF值的统计工作。
+
+接下来，我们可以调用这个模型将任意一段语料（依然是bow向量的迭代器）转化成TFIDF向量（的迭代器）。需要注意的是，这里的bow向量必须与训练语料的bow向量共享同一个特征字典（即共享同一个向量空间）。
+
+doc_bow = [(0, 1), (1, 1)]
+ print tfidf[doc_bow] # [(0, 0.70710678), (1, 0.70710678)]
+
+注意，同样是出于内存的考虑，model[corpus]方法返回的是一个迭代器。如果要多次访问model[corpus]的返回结果，可以先将结果向量序列化到磁盘上。
+
+我们也可以将训练好的模型持久化到磁盘上，以便下一次使用：
+
+tfidf.save("./model.tfidf")
+ tfidf = models.TfidfModel.load("./model.tfidf")
+ Gensim内置了多种主题模型的向量变换，包括LDA，LSI，RP，HDP等。这些模型通常以bow向量或tfidf向量的语料为输入，生成相应的主题向量。所有的模型都支持流式计算。关于Gensim模型更多的介绍，可以参考这里：API Reference（[https://radimrehurek.com/gensim/apiref.html](https://link.jianshu.com?t=https%3A%2F%2Fradimrehurek.com%2Fgensim%2Fapiref.html)）
 
 
 
