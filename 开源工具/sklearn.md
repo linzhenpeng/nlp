@@ -18,7 +18,7 @@ sklearn是机器学习中一个常用的python第三方模块，对常用的机�
 6.数据预处理（Preprocessing）
 本文将从sklearn的安装开始讲解，由浅入深，逐步上手sklearn。0
 
-分类任务:
+分类任务(还有逻辑回归,虽然是回归但是特别适合做分类):
 
 ![](./images/sklearn/20180419210311817.png)
 
@@ -1202,3 +1202,4 @@ import sklearn.externals as sk_externals
 sk_externals.joblib.dump(model,'model.pickle') #保存
 model = sk_externals.joblib.load('model.pickle') #载入
 ```
+
