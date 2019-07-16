@@ -28,11 +28,11 @@ TF-IDF有两层意思，一层是"词频"（Term Frequency，缩写为TF），�
 
 **第一步，计算词频。**
 
-![](.\images\TFIDF\bg2013031503.png)
+![](./images/TFIDF/bg2013031503.png)
 
 考虑到文章有长短之分，为了便于不同文章的比较，进行"词频"标准化。
 
-![](.\images\TFIDF\bg2013031504.png)
+![](./images/TFIDF/bg2013031503.png)
 
 或者
 
